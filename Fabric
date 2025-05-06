@@ -1,0 +1,70 @@
+# Microsoft Fabric Analytic Engineering Exam Quiz Application
+
+try:
+    import streamlit as st
+except ModuleNotFoundError:
+    raise ImportError("The 'streamlit' module is not installed. Please install it with 'pip install streamlit' before running this application.")
+
+# Define the questions and answers
+questions = [
+    {"question": "Which of the following can be used to apply sensitivity labels to items in a Fabric workspace?", "options": ["Row-level security", "Sensitivity labels", "Deployment pipelines", "Dataflows"], "answer": "Sensitivity labels"},
+    {"question": "To grant user A access only to specific dashboards within a workspace, which access control level should you configure?", "options": ["Workspace-level access control", "Item-level access control", "Object-level access control", "File-level access control"], "answer": "Item-level access control"},
+    # Additional questions would go here...
+]
+
+def main():
+    st.set_page_config(page_title="Fabric Engineering Exam Quiz", layout="centered")
+    st.title("Microsoft Fabric Analytic Engineering Exam Practice Quiz")
+
+    # Initialize session state
+    if "current" not in st.session_state:
+        st.session_state.current = 0
+        st.session_state.score = 0
+        st.session_state.user_answers = []
+
+    # Display question
+    q = questions[st.session_state.current]
+    st.subheader(f"Question {st.session_state.current + 1} of {len(questions)}")
+    st.write(q["question"])
+    choice = st.radio("Select an answer:", q["options"], key=f"q{st.session_state.current}")
+
+    # Navigation buttons
+    cols = st.columns([1, 1])
+    with cols[0]:
+        if st.button("Previous", disabled=st.session_state.current == 0):
+            st.session_state.current -= 1
+            st.experimental_rerun()
+    with cols[1]:
+        if st.button("Next"):
+            if len(st.session_state.user_answers) <= st.session_state.current:
+                st.session_state.user_answers.append(choice)
+                if choice == q["answer"]:
+                    st.session_state.score += 1
+
+            st.session_state.current += 1
+            if st.session_state.current >= len(questions):
+                show_results()
+            else:
+                st.experimental_rerun()
+
+def show_results():
+    st.success("Quiz Completed!")
+    st.write(f"Your Score: {st.session_state.score} / {len(questions)}")
+    st.write("---")
+    st.write("### Review Answers")
+    for idx, q in enumerate(questions):
+        user_ans = st.session_state.user_answers[idx] if idx < len(st.session_state.user_answers) else "No answer"
+        correct_ans = q["answer"]
+        status = "✅" if user_ans == correct_ans else "❌"
+        st.write(f"{idx+1}. {q['question']}")
+        st.write(f"- Your answer: {user_ans} {status}")
+        st.write(f"- Correct answer: {correct_ans}")
+        st.write("--")
+    if st.button("Retake Quiz"):
+        for key in ["current", "score", "user_answers"]:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.experimental_rerun()
+
+if __name__ == "__main__":
+    main()
